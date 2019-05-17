@@ -35,30 +35,28 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
 		Long id = null;
 		String usernameString = null;
-		String avatar = null;
+		String photo = null;
 		String token = null;
 
 		String response = Constants.loginRequest(url, params);
 
 		JSONObject responseJson;
-		try {
-			responseJson = new JSONObject(response);
-
-			id = responseJson.getJSONObject("userDetails").getLong("id");
-			usernameString = responseJson.getJSONObject("userDetails").getString("username");
-			token = responseJson.getString("token");
-			avatar = responseJson.getString("avatar");
-			if (!responseJson.getBoolean("success")) {
-				throw new BadCredentialsException(responseJson.getString("message"));
-
-			}
-
-		} catch (JSONException e) {
-
-			e.printStackTrace();
+		responseJson = new JSONObject(response);
+		if (!responseJson.getBoolean("success")) {
+			throw new BadCredentialsException(responseJson.getString("message"));
 		}
 
-		UserContext userContext = new UserContext(id, usernameString, token);
+		try {
+			id = responseJson.getJSONObject("userDetails").getLong("id");
+			usernameString = responseJson.getJSONObject("userDetails").getString("username");
+			photo = responseJson.getJSONObject("userDetails").getString("photo");
+			token = responseJson.getString("token");
+
+		} catch (JSONException e) {
+			// e.printStackTrace();
+		}
+
+		UserContext userContext = new UserContext(id, usernameString, photo, token);
 
 		ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
 		HttpSession session = attr.getRequest().getSession(true);
@@ -66,7 +64,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
 		session.setAttribute("id", id);
 
-		session.setAttribute("avatar", Constants.files_upload_path + "/" + avatar);
+		session.setAttribute("photo", Constants.files_upload_path + "/" + photo);
 
 		return new UsernamePasswordAuthenticationToken(userContext, token, Collections.emptyList());
 	}
